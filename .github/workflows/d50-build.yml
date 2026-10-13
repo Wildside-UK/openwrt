@@ -63,7 +63,13 @@ jobs:
             *) echo CONFIG_PACKAGE_uqmi=y >> .config ;;
           esac
           echo CONFIG_BUILD_LOG=y >> .config
-          if [ "${{ inputs.imagebuilder }}" = "yes" ]; then echo CONFIG_IB=y >> .config; fi
+          if [ "${{ inputs.imagebuilder }}" = "yes" ]; then
+            echo CONFIG_IB=y >> .config
+            # The daily image built from this IB also carries the USB modem
+            # tools (IceG SMS tool, uqmi); kmods cannot come from the snapshot
+            # feed, so build them here as modules.
+            printf '%s\n' CONFIG_PACKAGE_kmod-usb-serial=m CONFIG_PACKAGE_kmod-usb-serial-option=m CONFIG_PACKAGE_kmod-usb-net-qmi-wwan=m >> .config
+          fi
           make defconfig
           case "${{ inputs.ref || 'xunison-exigo-d50-pcie-nobrst' }}" in
             *pcie*) modem="kmod-mhi-pci-generic kmod-mhi-wwan-ctrl kmod-mhi-wwan-mbim umbim" ;;
